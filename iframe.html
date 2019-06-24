@@ -1,0 +1,83 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+	<meta charset="UTF-8">
+	<meta name="viewport" content="width=device-width, initial-scale=1.0">
+	<meta http-equiv="X-UA-Compatible" content="ie=edge">
+	<link rel="stylesheet" href="https://bootswatch.com/4/materia/bootstrap.min.css">
+	<style>
+		body {
+			display: flex;
+			justify-content: center;
+			align-content: center;
+		}
+
+		.btn {
+			margin-top: 100px;
+		}
+	</style>
+	<title>Child Window</title>
+</head>
+
+<body>
+	<div class="info-panel">
+		<img id="avatar-box" class="w-50" src="" />
+		<div id="username-box" class="font-weight-bold"></div>
+	</div>
+	<button class="btn btn-primary">请求授权</button>
+
+	<script>
+		// 绑定事件
+		const button = document.querySelector('button.btn');
+
+		button.addEventListener('click', () => {
+			getUserInfo('贪玩蓝月');
+		})
+
+		// 向父窗口发送消息
+		function getUserInfo(appName) {
+			if (window.parent) {
+				window.parent.postMessage({
+					rcEmbeddedSdk: {
+						action: 'getUserInfo',
+						payload: {
+							appName
+						}
+					},
+				}, '*');
+			}
+		}
+
+		// 监听父窗口消息
+		window.addEventListener('message', ({
+			data
+		}) => {
+			if (!data.rcEmbeddedSdk) { return; }
+
+			try {
+				if (data.rcEmbeddedSdk.action === 'getUserInfo') {
+					const {
+						success
+					} = data.rcEmbeddedSdk;
+
+					if (success) {
+						const usernameBox = document.querySelector('#username-box');
+						const avatarBox = document.querySelector('#avatar-box');
+						const { user: { username, avatarUrl} } = data.rcEmbeddedSdk.payload;
+
+						usernameBox.innerText = username;
+						avatarBox.src = avatarUrl;
+						button.style.display = 'none';
+					} else {
+						alert('你拒绝了授权');
+					}
+				}
+			} catch (err) {
+				console.warn(err);
+			}
+		});
+	</script>
+</body>
+
+</html>
